@@ -51,10 +51,38 @@ func printTicTacToe() {
 	}
 }
 
+func addr() func(int) int {
+	sum := 0
+
+	// addr 関数内で作成されたこの関数は、sumという変数を参照する。
+	// sum は addr 関数内で定義されているが、addrの実行が完了した後もsum変数は関数内に閉じ込められた状態で保持される
+	// この無名関数をクロージャーと呼ぶ。クロージャーの定義は、外部スコープの変数を参照する関数。クロージャーは外部スコープの変数をキャプチャする。
+	// ニュアンス的には、外部スコープの変数を、関数の外にあるにも関わらず、自らのうちに close(閉じ込める) してしまうから、closure と呼ぶ。
+	// また、関数が実行される場所に関係なく、この関数と閉じ込められたこのへ数が一緒にパッケージされ、変数が存在するスコープが閉じられて、関数内で使用できる状態が維持される。
+	// その感覚から、closure(閉じ込め)という名前がついている
+	return func(x int) int {
+		sum += x
+		return sum
+	}
+}
+
+func fibonacci() func() int {
+	first, second := 0, 1
+	return func() int {
+		current := first
+		first, second = second, first+second
+		return current
+	}
+}
+
 // A struct is a collection of fields.
 type Vertex struct {
 	X int
 	Y int
+}
+
+type Location struct {
+	Lat, Long float64
 }
 
 func main() {
@@ -165,14 +193,81 @@ func main() {
 
 		printTicTacToe()
 
+		// 足りなければ新たにallocateしてくれる
+		var s2 []int
+		printSlice((s2))
+		s2 = append(s2, 0)
+		printSlice((s2))
+		s2 = append(s2, 1, 2, 3)
+		printSlice((s2))
+
+		var powedNum = []int{1, 2, 4, 8}
+		for i, v := range powedNum {
+			fmt.Printf("2**%d = %d\n", i, v)
+		}
+		for i := range powedNum {
+			fmt.Println(i)
+		}
+		for _, v := range powedNum {
+			// fmt.Println(_) // これはエラーになる
+			fmt.Println(v)
+		}
+
+		// make しないと、ゼロ値である nil を指していて、キー設定できない
+		var m map[string]Location
+		fmt.Printf("map address: %p, content: %v\n", m, m)
+
+		if m == nil {
+			fmt.Println("The map is not initialized.")
+		} else {
+			fmt.Println("The map is initialized.")
+		}
+		// make で、map 内部で key と value を保存するためのハッシュテーブル用のメモリを割り当てている
+		m = make(map[string]Location)
+		fmt.Printf("map address: %p, content: %v\n", m, m)
+
+		fmt.Println(m)
+		m["Bell Labs"] = Location{
+			40.68433, -74.39967,
+		}
+		fmt.Println(m["Bell Labs"])
+		fmt.Println(m)
+
+		// とはいえ、makeしなくても、初期値を設定すれば勝手にハッシュテーブル用のメモリは割り当てられる
+		var m2 = map[string]Location{
+			"a": Location{
+				1.1, 2.2,
+			},
+			// 省略可能
+			"b": {
+				-3.343, -5.43,
+			},
+		}
+		fmt.Printf("map address: %p, content: %v\n", m2, m2)
+
+		m3 := make(map[string]int)
+		m3["A"] = 1
+		fmt.Println(m3["A"])
+		m3["A"] = 3
+		fmt.Println(m3["A"])
+		m3V1, ok := m3["A"]
+		fmt.Println(m3V1, ok)
+		delete(m3, "A")
+		fmt.Println(m3["A"])
+		m3V2, ok := m3["A"]
+		fmt.Println(m3V2, ok)
 	}
 
-	// 足りなければ新たにallocateしてくれる
-	var s2 []int
-	printSlice((s2))
-	s2 = append(s2, 0)
-	printSlice((s2))
-	s2 = append(s2, 1, 2, 3)
-	printSlice((s2))
+	pos, neg := addr(), addr()
+	for i := 0; i < 10; i++ {
+		fmt.Println(
+			pos(i),
+			neg(-i),
+		)
+	}
+	f := fibonacci()
+	for i := 0; i < 10; i++ {
+		fmt.Println(f())
+	}
 
 }
