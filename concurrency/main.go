@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"time"
 )
 
@@ -86,6 +87,46 @@ func buildTree(s []int, root **Tree) *Tree {
 	return *root
 }
 
+func walk(t *Tree, c chan int) {
+	if t != nil {
+		c <- t.value
+		walk(t.left, c)
+		walk(t.right, c)
+	}
+}
+
+func tree2slice(t *Tree) []int {
+	var s []int
+	c := make(chan int)
+	go func() {
+		walk(t, c)
+		close(c)
+	}()
+
+	for v := range c {
+		s = append(s, v)
+	}
+
+	sort.Ints(s)
+	return s
+}
+
+func same(t1, t2 *Tree) bool {
+	s1 := tree2slice(t1)
+	s2 := tree2slice(t2)
+
+	if len(s1) != len(s2) {
+		return false
+	}
+
+	for i := range s1 {
+		if s1[i] != s2[i] {
+			return false
+		}
+	}
+	return true
+}
+
 func main() {
 	if false {
 		fmt.Println("a")
@@ -130,10 +171,33 @@ func main() {
 
 	}
 	s1 := []int{8, 13, 1, 2, 1, 5, 3}
-	//s2 := []int{1, 1, 2, 3, 5, 8, 13}
+	s2 := []int{1, 1, 2, 3, 5, 8, 13}
+	s3 := []int{1, 1, 2, 3, 5, 8, 12}
+	s4 := []int{1, 1, 2, 3, 5}
 	//s3 := []int{3, 1, 1, 2, 8, 5, 13}
-	var t1 *Tree
+	var t1, t2, t3, t4 *Tree
 	buildTree(s1, &t1)
-	fmt.Println(*t1)
+	buildTree(s2, &t2)
+	buildTree(s3, &t3)
+	buildTree(s4, &t4)
+
+	if same(t1, t2) {
+		fmt.Println("same")
+	} else {
+
+		fmt.Println("different")
+	}
+	if same(t1, t3) {
+		fmt.Println("same")
+	} else {
+
+		fmt.Println("different")
+	}
+	if same(t1, t4) {
+		fmt.Println("same")
+	} else {
+
+		fmt.Println("different")
+	}
 
 }
