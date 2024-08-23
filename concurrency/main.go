@@ -5,6 +5,12 @@ import (
 	"time"
 )
 
+type Tree struct {
+	right *Tree
+	left  *Tree
+	value int
+}
+
 func say(s string) {
 	for i := 0; i < 5; i++ {
 		time.Sleep(100 * time.Millisecond)
@@ -58,45 +64,76 @@ func fibonacci3(c, quit chan int) {
 	}
 }
 
+func insert(parent **Tree, v int) {
+	if *parent == nil {
+		*parent = &Tree{value: v}
+		fmt.Printf("%v is inserted\n", v)
+		return
+	}
+	if (*parent).value >= v {
+		fmt.Printf("%v is smaller than parent(%v)\n", v, (*parent).value)
+		insert(&(*parent).left, v)
+	} else {
+		fmt.Printf("%v is larger than parent(%v)\n", v, (*parent).value)
+		insert(&(*parent).right, v)
+	}
+}
+
+func buildTree(s []int, root **Tree) *Tree {
+	for _, v := range s {
+		insert(root, v)
+	}
+	return *root
+}
+
 func main() {
 	if false {
 		fmt.Println("a")
 		go say("world")
 		say("hello")
-	}
-	s := []int{7, 2, 8, -9, 4, 0}
-	c := make(chan int)
-	go sum(s[len(s)/2:], c)
-	go sum(s[:len(s)/2], c)
-	x, y := <-c, <-c
-	fmt.Println(x, y, x+y)
 
-	c2 := make(chan int, 2)
-	c2 <- 1
-	c2 <- 2
-	// c2 <- 3 // 取り出される前に入れようとしているので、dead lock エラー！
-	fmt.Println(<-c2)
-	fmt.Println(<-c2)
-	// fmt.Println(<-c3) // 2つまでしか入らないので、3回目を呼び出すと dead lock エラー！
+		s := []int{7, 2, 8, -9, 4, 0}
+		c := make(chan int)
+		go sum(s[len(s)/2:], c)
+		go sum(s[:len(s)/2], c)
+		x, y := <-c, <-c
+		fmt.Println(x, y, x+y)
 
-	c3 := make(chan int, 10)
-	go fibonacci(cap(c3), c3)
-	v, ok := <-c3
-	fmt.Println(v, ok)
-	for i := range c3 {
-		fmt.Println(i)
-	}
-	v, ok = <-c3
-	fmt.Println(v, ok)
+		c2 := make(chan int, 2)
+		c2 <- 1
+		c2 <- 2
+		// c2 <- 3 // 取り出される前に入れようとしているので、dead lock エラー！
+		fmt.Println(<-c2)
+		fmt.Println(<-c2)
+		// fmt.Println(<-c3) // 2つまでしか入らないので、3回目を呼び出すと dead lock エラー！
 
-	c4 := make(chan int)
-	quit := make(chan int)
-	go func() {
-		for i := 0; i < 10; i++ {
-			fmt.Println(<-c4)
+		c3 := make(chan int, 10)
+		go fibonacci(cap(c3), c3)
+		v, ok := <-c3
+		fmt.Println(v, ok)
+		for i := range c3 {
+			fmt.Println(i)
 		}
-		quit <- 0
-	}()
-	// fibonacci2(c4, quit)
-	// fibonacci3(c4, quit)
+		v, ok = <-c3
+		fmt.Println(v, ok)
+
+		c4 := make(chan int)
+		quit := make(chan int)
+		go func() {
+			for i := 0; i < 10; i++ {
+				fmt.Println(<-c4)
+			}
+			quit <- 0
+		}()
+		// fibonacci2(c4, quit)
+		// fibonacci3(c4, quit)
+
+	}
+	s1 := []int{8, 13, 1, 2, 1, 5, 3}
+	//s2 := []int{1, 1, 2, 3, 5, 8, 13}
+	//s3 := []int{3, 1, 1, 2, 8, 5, 13}
+	var t1 *Tree
+	buildTree(s1, &t1)
+	fmt.Println(*t1)
+
 }
