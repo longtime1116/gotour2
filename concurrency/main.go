@@ -41,6 +41,23 @@ func fibonacci2(c, quit chan int) {
 	}
 }
 
+func fibonacci3(c, quit chan int) {
+	x, y := 0, 1
+	for {
+		select {
+		case c <- x: // 呼び出し元がcから値を要求したタイミングでこれが実行される
+			fmt.Printf("x added: %v\n", x)
+			x, y = y, x+y
+		case <-quit:
+			fmt.Println("quit")
+			return
+		default:
+			fmt.Println(".....")
+			time.Sleep(50 * time.Millisecond)
+		}
+	}
+}
+
 func main() {
 	if false {
 		fmt.Println("a")
@@ -80,5 +97,6 @@ func main() {
 		}
 		quit <- 0
 	}()
-	fibonacci2(c4, quit)
+	// fibonacci2(c4, quit)
+	// fibonacci3(c4, quit)
 }
